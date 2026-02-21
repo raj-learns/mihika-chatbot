@@ -1,38 +1,39 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>AI Chat</title>
+    <title>Mihika Chat by Raj</title>
     <style>
         body {
             font-family: Arial;
             background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
+            height: 100vh;
         }
 
         .chat-container {
-            width: 400px;
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            margin: auto;
             background: white;
             display: flex;
             flex-direction: column;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
 
         .chat-box {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             overflow-y: auto;
         }
 
         .message {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 10px;
-            max-width: 70%;
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 85%;
+            word-wrap: break-word;
+            font-size: 15px;
         }
 
         .user {
@@ -47,78 +48,100 @@
 
         .input-area {
             display: flex;
+            padding: 10px;
             border-top: 1px solid #ddd;
+            background: white;
         }
 
         input {
             flex: 1;
-            padding: 10px;
-            border: none;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
             outline: none;
+            font-size: 16px;
         }
 
         button {
-            padding: 10px;
+            margin-left: 8px;
+            padding: 12px 18px;
+            border-radius: 20px;
             border: none;
             background: #4CAF50;
             color: white;
+            font-size: 16px;
             cursor: pointer;
         }
+
+        /* Mobile tweaks */
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 100vh;
+                max-width: 100%;
+            }
+
+            .message {
+                font-size: 14px;
+                max-width: 90%;
+            }
+        }
     </style>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
 
-<div class="chat-container">
-    <div id="chatBox" class="chat-box"></div>
+    <div class="chat-container">
+        <div id="chatBox" class="chat-box"></div>
 
-    <div class="input-area">
-        <input id="msg" placeholder="Type message..." />
-        <button onclick="send()">Send</button>
+        <div class="input-area">
+            <input id="msg" placeholder="Type message..." />
+            <button onclick="send()">Send</button>
+        </div>
     </div>
-</div>
 
-<script>
-async function send() {
-    const input = document.getElementById("msg");
-    const text = input.value;
-    if (!text) return;
+    <script>
+        async function send() {
+            const input = document.getElementById("msg");
+            const text = input.value;
+            if (!text) return;
 
-    addMessage(text, "user");
-    input.value = "";
+            addMessage(text, "user");
+            input.value = "";
 
-    const res = await fetch("https://mihika-chatbot.onrender.com/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            role: "user",
-            content: text
-        })
-    });
+            const res = await fetch("https://mihika-chatbot.onrender.com/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    role: "user",
+                    content: text
+                })
+            });
 
-    const data = await res.json();
-    addMessage(data.messages, "bot");
-}
+            const data = await res.json();
+            addMessage(data.messages, "bot");
+        }
 
-function addMessage(text, type) {
-    const box = document.getElementById("chatBox");
-    const div = document.createElement("div");
-    div.className = "message " + type;
-    div.innerHTML = marked.parse(text);
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
+        function addMessage(text, type) {
+            const box = document.getElementById("chatBox");
+            const div = document.createElement("div");
+            div.className = "message " + type;
+            div.innerHTML = marked.parse(text);
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
 
-window.onload = function() {
-    addMessage(
-        "Hi 👋 I am Mihika, developed by Raj. I can help you in your day-to-day decisions!",
-        "bot"
-    );
-};
+        window.onload = function () {
+            addMessage(
+                "Hi 👋 I am Mihika, developed by Raj. I can help you in your day-to-day decisions!",
+                "bot"
+            );
+        };
 
-</script>
+    </script>
 
 </body>
-</html>
 
+</html>
