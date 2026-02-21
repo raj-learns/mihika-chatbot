@@ -31,6 +31,7 @@ llm = ChatOpenAI(
 class Message(BaseModel):
     role: str
     content: str
+    thread_id: str
     
 class State(TypedDict):
   messages: Annotated[list, add_messages]
@@ -60,14 +61,15 @@ graph = builder.compile(checkpointer=memory)
 
 @app.post("/chat")    
 def chat(message: Message):
-    config = {"configurable" : {"thread_id" : 5}}
+    config = {"configurable" : {"thread_id" : message.thread_id}}
     response = graph.invoke(
     {"messages": [{"role": message.role, "content": message.content}]},
     config=config
 )
 
     return {"messages": response["messages"][-1].content,
-            "session_id": config["configurable"]["thread_id"]}
+            "session_id": message.thread_id
+            }
 
 
 

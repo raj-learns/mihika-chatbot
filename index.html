@@ -103,6 +103,13 @@
     </div>
 
     <script>
+        let threadId = localStorage.getItem("threadId");
+
+        if (!threadId) {
+            threadId = prompt("Enter your phone number to start chat:");
+            localStorage.setItem("threadId", threadId);
+        }
+
         async function send() {
             const input = document.getElementById("msg");
             const text = input.value;
@@ -116,7 +123,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     role: "user",
-                    content: text
+                    content: text,
+                    thread_id: threadId
                 })
             });
 
