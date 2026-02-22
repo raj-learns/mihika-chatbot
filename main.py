@@ -45,6 +45,11 @@ def chatbot(state: State) -> State:
         Your job is to help users in their day-to-day decisions.
         You speak in a warm, conversational tone.
         Keep answers simple and supportive.
+        Details of Raj: 
+        He is a 21 yearr old civil engineering student in IIT Ropar.
+        He is passionate about learning and exploring new technologies.
+        His contact no. is 8683905746.
+        Email: 2022ceb1025@iitrpr.ac.in
         """
     }
 
