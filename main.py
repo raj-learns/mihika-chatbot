@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -9,6 +9,8 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.message import add_messages
 from typing import Annotated
 from fastapi.middleware.cors import CORSMiddleware
+from pypdf import PdfReader
+from docx import Document
 
 memory = MemorySaver()
 load_dotenv()
@@ -87,10 +89,122 @@ def read_root():
 def read_item(item_id: int, q: str = None) :
     return {"game-id": item_id, "query" : q}
 
-# @app.post("/user")
-# def create_user(user: User):
-#     print(user)
-#     return {
-#         "message": "User created successfully",
-#         "user": user
-#     }
+# resume reader
+
+class MatchResult(BaseModel):
+    match_score: float
+    shortlisted: bool
+    interview_questions: List[str]
+
+def extract_text(file: UploadFile, content: bytes) :
+
+    filename = file.filename.lower()
+
+    # PDF
+    if filename.endswith(".pdf"):
+        reader = PdfReader(file.file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return text
+
+    # DOCX
+    elif filename.endswith(".docx"):
+        doc = Document(file.file)
+        return "\n".join([p.text for p in doc.paragraphs])
+
+    # TXT fallback
+    else:
+        return content.decode("utf-8", errors="ignore")
+    
+resume_store = ""
+JD_store = ""
+
+@app.post("/upload_resume")
+async def upload_resume(file: UploadFile = File(...)):
+    content = await file.read()
+    text = extract_text(file, content)
+    global resume_store
+    resume_store = text
+    return {"message": "Resume uploaded successfully"}
+
+@app.post("/upload_jd")
+async def upload_jd(file: UploadFile = File(...)):
+    content = await file.read()
+    text = extract_text(file, content)     
+    global JD_store
+    JD_store = text
+    return {"message": "JD uploaded successfully", "text": text}
+
+def analyze_match(resume_text: str, jd_text: str):
+
+    prompt = f"""
+    You are a technical recruiter.
+
+    From the JOB DESCRIPTION extract:
+    - A list of required skills (as a Python list).
+
+    From the RESUME extract:
+    - A list of candidate skills (as a Python list).
+
+    Then:
+    - Provide matched_skills (intersection).
+    - Provide missing_skills.
+    - Generate 5 interview questions based on JD and missing skills.
+
+    Return strictly in JSON format like:
+
+    {{
+        "required_skills": [],
+        "candidate_skills": [],
+        "matched_skills": [],
+        "missing_skills": [],
+        "interview_questions": []
+    }}
+
+    JOB DESCRIPTION:
+    {jd_text}
+
+    RESUME:
+    {resume_text}
+    """
+    response = llm.invoke(prompt)
+    content = response.content.strip()
+    import re
+    import json
+    json_match = re.search(r"\{.*\}", content, re.DOTALL)
+
+    if not json_match:
+        raise ValueError("AI did not return valid JSON")
+
+    data = json.loads(json_match.group())
+
+    required = data["required_skills"]
+    matched = data["matched_skills"]
+    print("Required:", required)
+    print("Matched:", matched)
+
+    if len(required) == 0:
+        score = 0
+    else:
+        score = (len(matched) / len(required)) * 100
+
+    shortlisted = score >= 60
+
+    return MatchResult(
+        match_score=round(score, 2),
+        shortlisted=shortlisted,
+        interview_questions=data["interview_questions"]
+    )
+    
+@app.get("/compare")
+def compare_resume_jd():
+
+    global resume_store, JD_store
+
+    if not resume_store or not JD_store:
+        return {"error": "Resume or JD not uploaded"}
+
+    result = analyze_match(resume_store, JD_store)
+
+    return result

@@ -36,6 +36,11 @@
             font-size: 15px;
         }
 
+        .typing {
+            font-style: italic;
+            color: #777;
+        }
+
         .user {
             background: #4CAF50;
             color: white;
@@ -94,6 +99,9 @@
 <body>
 
     <div class="chat-container">
+        <button onclick="goToResumeMatcher()" style="margin-bottom:10px;">
+            Click to check Resume Matcher feature
+        </button>
         <div id="chatBox" class="chat-box"></div>
 
         <div class="input-area">
@@ -117,6 +125,7 @@
 
             addMessage(text, "user");
             input.value = "";
+            showTyping(); 
 
             const res = await fetch("https://mihika-chatbot.onrender.com/chat", {
                 method: "POST",
@@ -129,6 +138,7 @@
             });
 
             const data = await res.json();
+            hideTyping();
             addMessage(data.messages, "bot");
         }
 
@@ -147,6 +157,30 @@
                 "bot"
             );
         };
+
+        function goToResumeMatcher() {
+            window.location.href = "resume_check.html";
+        }
+
+        let typingDiv = null;
+
+        function showTyping() {
+            const box = document.getElementById("chatBox");
+
+            typingDiv = document.createElement("div");
+            typingDiv.className = "message bot typing";
+            typingDiv.innerText = "Mihika is typing...";
+
+            box.appendChild(typingDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function hideTyping() {
+            if (typingDiv) {
+                typingDiv.remove();
+                typingDiv = null;
+            }
+        }
 
     </script>
 
