@@ -148,7 +148,7 @@ async function compare() {
         loadingText.innerText = "Uploading Resume...";
         let formData = new FormData();
         formData.append("file", resumeFile);
-        await fetch("https://mihika-chatbot.onrender.com/upload-resume", {
+        await fetch("https://mihika-chatbot.onrender.com/upload_resume", {
             method: "POST",
             body: formData
         });
@@ -156,7 +156,7 @@ async function compare() {
         loadingText.innerText = "Uploading Job Description...";
         formData = new FormData();
         formData.append("file", jdFile);
-        await fetch("https://mihika-chatbot.onrender.com/upload-jd", {
+        await fetch("https://mihika-chatbot.onrender.com/upload_jd", {
             method: "POST",
             body: formData
         });
