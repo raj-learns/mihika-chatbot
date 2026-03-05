@@ -11,6 +11,8 @@ from typing import Annotated
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 from docx import Document
+from datetime import datetime
+from knowledgebase import knowledge
 
 memory = MemorySaver()
 load_dotenv()
@@ -25,6 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+today = datetime.now().strftime("%A, %d %B %Y")
 
 llm = ChatOpenAI(
     model="openai/gpt-4o-mini"
@@ -37,8 +40,31 @@ class Message(BaseModel):
     
 class State(TypedDict):
   messages: Annotated[list, add_messages]
+  
+def search_knowledge(user_message: str):
+
+    user_message = user_message.lower()
+    results = []
+
+    for key, value in knowledge.items():
+
+        # check main key
+        if key in user_message:
+            results.append({key: value})
+            continue
+
+        # check aliases
+        if "aliases" in value:
+            for alias in value["aliases"]:
+                if alias in user_message:
+                    results.append({key: value})
+
+    return results
 
 def chatbot(state: State) -> State:
+    user_message = state["messages"][-1]["content"]
+
+    relevant_info = search_knowledge(user_message)
 
     system_prompt = {
         "role": "system",
@@ -47,6 +73,13 @@ def chatbot(state: State) -> State:
         Your job is to help users in their day-to-day decisions.
         You speak in a warm, conversational tone.
         Keep answers simple and supportive.
+        Today is {today}.
+        
+        If the following knowledge is relevant, use it while answering.
+
+        Knowledge:
+        {relevant_info}
+        
         Details of Raj: 
         He is a 21 yearr old civil engineering student in IIT Ropar.
         He is passionate about learning and exploring new technologies.
