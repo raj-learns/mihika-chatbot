@@ -18,6 +18,7 @@ memory = MemorySaver()
 load_dotenv()
 app = FastAPI()
 
+today = datetime.now().strftime("%A, %d %B %Y")
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-today = datetime.now().strftime("%A, %d %B %Y")
+
 
 llm = ChatOpenAI(
     model="openai/gpt-4o-mini"
@@ -62,30 +63,26 @@ def search_knowledge(user_message: str):
     return results
 
 def chatbot(state: State) -> State:
-    user_message = state["messages"][-1]["content"]
+    user_message = state["messages"][-1].content
 
     relevant_info = search_knowledge(user_message)
 
     system_prompt = {
         "role": "system",
-        "content": """
-        You are Mihika, a friendly AI assistant created by Raj.
-        Your job is to help users in their day-to-day decisions.
-        You speak in a warm, conversational tone.
-        Keep answers simple and supportive.
-        Today is {today}.
-        
-        If the following knowledge is relevant, use it while answering.
+        "content": f"""
+            You are Mihika, a friendly AI assistant created by Raj.
 
-        Knowledge:
-        {relevant_info}
-        
-        Details of Raj: 
-        He is a 21 yearr old civil engineering student in IIT Ropar.
-        He is passionate about learning and exploring new technologies.
-        His contact no. is 8683905746.
-        Email: 2022ceb1025@iitrpr.ac.in
-        """
+            IMPORTANT RULES:
+            - Only use the provided knowledge if the user asks about it.
+            - Do NOT invent new facts.
+            - If information is not in the knowledge, say you don't know.
+            - If knowledge exists, answer using ONLY that information.
+
+            Today is {today}
+
+            Relevant knowledge:
+            {relevant_info}
+            """
     }
 
     messages = [system_prompt] + state["messages"]
