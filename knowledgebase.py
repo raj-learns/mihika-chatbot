@@ -27,6 +27,22 @@ knowledge = {
             "Jholachhaap doctor"
         ]
     },
+    "anshika" : {
+        "aliases": [
+            "raj's sister",
+            "raj sister",
+            "raj's younger sister"
+        ],
+        "description": "Anshika is Raj's younger sister.",
+        "funny_facts": [
+            "She is a fashion enthusiast",
+            "She is a foodie",
+            "She is a reel lover",
+            "She didn't attempt her first ca exam because she was very sure it is too much for her",
+            
+        ]
+
+    },
 
     "iit_ropar": {
         "description": "Indian Institute of Technology Ropar",
