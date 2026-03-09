@@ -13,8 +13,9 @@ from pypdf import PdfReader
 from docx import Document
 from datetime import datetime
 from knowledgebase import knowledge
+from db import save_message, get_last_messages, get_full_history
 
-memory = MemorySaver()
+# memory = MemorySaver()
 load_dotenv()
 app = FastAPI()
 
@@ -94,30 +95,25 @@ builder = StateGraph(State)
 builder.add_node("chatbot", chatbot)    
 builder.add_edge(START, "chatbot")
 builder.add_edge("chatbot", END)
-graph = builder.compile(checkpointer=memory)
+graph = builder.compile()
 
 @app.post("/chat")    
 def chat(message: Message):
-    config = {"configurable" : {"thread_id" : message.thread_id}}
-    response = graph.invoke(
-    {"messages": [{"role": message.role, "content": message.content}]},
-    config=config
-)
-
-    return {"messages": response["messages"][-1].content,
-            "session_id": message.thread_id
+    thread_id = message.thread_id
+    save_message(thread_id, message.role, message.content)
+    history = get_last_messages(thread_id)
+    config = {"configurable" : {"thread_id" : thread_id}}
+    response = graph.invoke({"messages": history}, config=config)
+    bot_reply = response["messages"][-1].content
+    save_message(thread_id, "assistant", bot_reply)
+    return {"messages": bot_reply,
+            "session_id": thread_id
             }
 
-
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-@app.get("/item/{item_id}")
-def read_item(item_id: int, q: str = None) :
-    return {"game-id": item_id, "query" : q}
+@app.get("/history/{thread_id}")
+def get_history(thread_id: str):
+    history = get_full_history(thread_id)
+    return history
 
 # resume reader
 

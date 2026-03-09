@@ -454,9 +454,23 @@ v<!DOCTYPE html>
 
     function goToResumeMatcher() { window.location.href = "resume_check.html"; }
 
-    window.onload = () => {
+window.onload = async () => {
+
+    const res = await fetch(
+        `https://mihika-chatbot.onrender.com/history/${threadId}`
+    );
+
+    const history = await res.json();
+
+    if (history.length === 0) {
         addMessage("Hi 👋 I'm **Mihika**, developed by Raj. I can help you in your day-to-day decisions!", "bot");
-    };
+        return;
+    }
+
+    history.forEach(msg => {
+        addMessage(msg.content, msg.role === "user" ? "user" : "bot");
+    });
+};
 </script>
 
 </body>
