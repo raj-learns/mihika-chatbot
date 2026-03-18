@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
@@ -13,7 +14,8 @@ from pypdf import PdfReader
 from docx import Document
 from datetime import datetime
 from knowledgebase import knowledge
-from db import save_message, get_last_messages, get_full_history
+from db import save_message, get_last_messages, get_full_history, get_dictionary_history
+from dictionary import get_meaning
 
 # memory = MemorySaver()
 load_dotenv()
@@ -234,3 +236,20 @@ def compare_resume_jd():
     result = analyze_match(resume_store, JD_store)
 
     return result
+
+#Dictionary API
+
+@app.get("/dictionary")
+def dictionary(word: str, thread_id: str):
+    result = get_meaning(word)
+    save_message(
+        thread_id,
+        "dictionary",
+        json.dumps(result)
+    )
+    return result
+
+@app.get("/dictionary_history/{thread_id}")
+def fetch_dictionary_history(thread_id: str):
+    history = get_dictionary_history(thread_id)
+    return history

@@ -58,3 +58,17 @@ def get_full_history(thread_id):
         {"role": r[0], "content": r[1]}
         for r in rows
     ]
+    
+def get_dictionary_history(thread_id):
+    cursor.execute(
+        """
+        SELECT content FROM messages
+        WHERE thread_id = ? AND role = 'dictionary'
+        ORDER BY id DESC
+        """,
+        (thread_id,)
+    )
+
+    rows = cursor.fetchall()
+
+    return [r[0] for r in rows]
